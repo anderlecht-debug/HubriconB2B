@@ -1,6 +1,6 @@
 // The public-data case study: its files are current, its shape is the animation's
 // contract, its numbers are the engine's, and it never names the brand.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";

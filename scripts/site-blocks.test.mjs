@@ -2,7 +2,7 @@
 // a planned course never presented as one that exists, an empty video slot that says so
 // in the future tense, a testimonial only with consent, and a scoreboard illustration
 // counted by the same rules as the terms.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

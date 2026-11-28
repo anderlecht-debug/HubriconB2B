@@ -14,8 +14,15 @@ tried, instead of going out to the internet. Tests inject their own doubles
 (FakeFetcher) and are unaffected.
 """
 
+import matplotlib.font_manager  # noqa: F401  (see the note below: imported for what it does)
 import pytest
 
+# The report's charts import matplotlib inside the tests. On a machine that has never drawn
+# a chart (a new clone, CI), matplotlib's first import lists the installed fonts by running
+# `fc-list` or `system_profiler`, and the guard below refused that as if it were a request:
+# 14 tests failed on any clean machine and passed on any machine with a font list already on
+# disk. The import above builds that list here, before any test and before the guard is on,
+# so the guard stays whole: inside a test, every subprocess is still refused.
 from hubricon_engine.harvest import enrich as enrichmod
 from hubricon_engine.harvest import fetch as fetchmod
 from hubricon_engine.sourcing import discover as discovermod

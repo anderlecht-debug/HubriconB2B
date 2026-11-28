@@ -1,0 +1,46 @@
+#!/bin/sh
+# The local gate: git runs this before every `git push`, and a failing test stops the push.
+#
+#   every push        the Node tests (under a second)
+#   a push to main    the engine tests as well (about 2 minutes). Pushing main deploys production.
+#
+# Turn it on once per clone:   npm ci && npm run hooks
+# Run the same checks by hand: npm test, or npm run check for both suites.
+#
+# It tests the files as they are on disk, not the commits being pushed, so commit first.
+# CI (.github/workflows/ci.yml) runs both suites on the pushed commits either way; this hook
+# only finds a red test a few minutes sooner.
+set -eu
+
+to_main=0
+pushing=0
+# git hands over one line per ref: <local ref> <local sha> <remote ref> <remote sha>
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  case "$local_sha" in
+    *[!0]*) ;;            # a real commit
+    *) continue ;;        # all zeros: the branch is being deleted, nothing to test
+  esac
+  pushing=1
+  if [ "$remote_ref" = "refs/heads/main" ]; then to_main=1; fi
+done
+if [ "$pushing" = 0 ]; then exit 0; fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+run() {
+  label=$1; shift
+  printf 'pre-push: %s ... ' "$label"
+  if out=$("$@" </dev/null 2>&1); then
+    echo "ok"
+  else
+    echo "FAILED"
+    printf '%s\n' "$out"
+    echo "pre-push: nothing was pushed. Fix the test above (or the code it guards) and push again."
+    exit 1
+  fi
+}
+
+run "Node tests" npm test
+if [ "$to_main" = 1 ]; then
+  run "engine tests, about 2 minutes (this push goes to main)" npm run test:engine
+fi

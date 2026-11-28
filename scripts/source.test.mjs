@@ -1,7 +1,7 @@
 // Where a visitor first came from (assets/site.js sourceFrom): the code a film's link carries
 // rides the booking, so the spec's phase-2 gate, booked calls from published content, can be
 // counted. Only a short code is ever kept.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

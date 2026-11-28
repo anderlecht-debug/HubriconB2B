@@ -2,7 +2,7 @@
 // for where they sell, nobody is promised a reading /call cannot do (a Shopify-only seller
 // hears nothing about Seller Central), and the fit tag in the booking URL is a code, not a
 // verdict a prospect can read in their address bar.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

@@ -2,7 +2,7 @@
 // all in one sitting and the list cannot quietly fall behind the code again
 // (2026-10-04: INSTANTLY_API_KEY, CALENDLY_URL and the review email were read by
 // code that no example mentioned).
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";

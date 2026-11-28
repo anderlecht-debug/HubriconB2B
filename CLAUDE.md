@@ -46,6 +46,26 @@ model change.
 
 ## Tests
 
-- Engine: `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 5 minutes).
-- Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page,
-  the tab pages and both case studies).
+- Node: `npm test`, which is `node --test` from the repo root (under a second: the API
+  helpers, the Record verifier, the home page, the tab pages, the lessons and both case
+  studies). Give it no folders: `node --test lib/ scripts/` fails on Node 22. A new clone
+  runs `npm ci` once first: one test imports `@supabase/supabase-js`.
+- Engine: `npm run test:engine`, which is
+  `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 2 minutes).
+- Both: `npm run check`.
+- A test that reads the clock or a rate card pins the day it means. A test that passes
+  today and fails next month is a bug in the test.
+
+## How we ship
+
+1. Work on a branch. Never commit to `main` and never push `main` directly.
+2. One change per pull request. Keep it small enough to read in one sitting.
+3. Docs the change makes untrue are fixed in the same pull request.
+4. Open the pull request. CI (`.github/workflows/ci.yml`) runs the Node tests, the engine
+   tests and the agent tools on it. Red means not ready: fix the stale side, never weaken
+   the check.
+5. Look at the Vercel preview link on the pull request before asking for the merge.
+6. Hagen merges to `main`. That merge deploys production.
+
+Run `npm ci` and `npm run hooks` once per clone. After that git runs the Node tests before every push,
+and the engine tests too when the push goes to `main` (`.githooks/pre-push`).

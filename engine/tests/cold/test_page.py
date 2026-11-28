@@ -5,10 +5,26 @@ from datetime import date
 
 import pytest
 
-from hubricon_engine.cold import charts, findings, page, select
+from hubricon_engine.cold import charts, findings, page, priors, select
 from builders import item, snapshot
 
 TODAY = date(2026, 6, 1)
+
+
+@pytest.fixture(autouse=True)
+def _one_day_for_the_finding_and_its_chart(monkeypatch):
+    """Every finding here is detected on TODAY, but a chart takes no date: it prices its
+    curve on the fee card in force when it is drawn, and priors reads the clock for that.
+    In a real run both happen on the same day. Here they did not, so these tests changed
+    with the calendar: the price chart gained a $4.00 tick when the holiday card began on
+    2026-10-15, and from 2027-01-15, the day after the last loaded card ends, two findings
+    would have rendered no chart at all. So the card's clock is pinned to the same day."""
+    class _Pinned(date):
+        @classmethod
+        def today(cls):
+            return TODAY
+
+    monkeypatch.setattr(priors, "date", _Pinned)
 
 
 def built(**kw):

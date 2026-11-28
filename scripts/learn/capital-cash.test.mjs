@@ -2,7 +2,7 @@
 // the engine it teaches: every figure and the spreadsheet were computed and checked by Hubricon's
 // engine (scripts/learn/capital_cash.py), and are re-checked whenever the engine moves; the
 // worked examples are labelled invented wherever they show; nothing inside a lesson sells.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

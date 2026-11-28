@@ -2,7 +2,7 @@
 // cases the engine itself computed (scripts/learn/price_curve.py: models/elasticity.py `_fit`,
 // models/pricing_engine.py). A reader who types their own history into the course gets the
 // numbers Hubricon's engine would give.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

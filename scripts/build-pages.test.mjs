@@ -2,7 +2,7 @@
 // Hormozi standard with one action, every section it gave up on the page under its tab,
 // the attribution rules identical wherever they appear, and every page honest about what
 // its figures are.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

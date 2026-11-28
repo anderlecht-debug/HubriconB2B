@@ -4,7 +4,7 @@
 // standing invitation to the call and nothing for sale inside, an Education tab on every
 // page. And the spreadsheet: built from the card the engine prices with, and re-verified
 // whenever that card or the file moves.
-//   node --test scripts/
+//   node --test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -19,16 +19,29 @@ const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style
 
 const hub = read("learn/index.html");
 const course = read("learn/fee-staircase.html");
+const library = JSON.parse(read("data/library.json"));
+
+// Two lesson templates live under /learn, and every rule below holds for both; only the
+// markup it is read from differs. The fee, price, cash and margin courses use the one from
+// 2026-10-01: article.lesson, a "Check yourself" list, div.do, and a separate -card page.
+// The Late Supplier (2026-11-22) has its own: article.ls-lesson, a "Guess first" and a
+// "Quick check" question, aside.ls-do, and the course on one page as its last section.
+const isLs = (page) => page.includes('<article class="ls-lesson"');
+const lessonsOf = (page) => [...page.matchAll(/<article class="(ls-)?lesson( ls-end)?" id="([^"]+)"[\s\S]*?<\/article>/g)].map(([whole, , end, id]) => ({ whole, id, end: Boolean(end) }));
 
 test("the hub links every live course and only those; a planned one says so and goes nowhere", () => {
   const main = hub.slice(hub.indexOf("<main"), hub.indexOf("</main>"));
   const links = [...new Set([...main.matchAll(/<a\b[^>]*href="(\/learn\/[a-z-]+)"/g)].map(([, h]) => h))];
   assert.deepEqual(links.sort(), Object.values(COURSES).map((c) => c.path).sort());
-  const planned = [...main.matchAll(/<article class="tile tile-planned"[\s\S]*?<\/article>/g)].map(([t]) => t);
+  // Since the hub was rebuilt around its featured course (2026-11-22) a planned course is a
+  // div.hub-plan inside section.hub-planned, one for each planned course in data/library.json.
+  const shelf = main.match(/<section class="hub-planned"[\s\S]*?<\/section>/)[0];
+  const planned = shelf.split('<div class="hub-plan">').slice(1);
   assert.ok(planned.length >= 1);
+  assert.equal(planned.length, library.courses.filter((c) => c.status !== "live").length, "one tile for each planned course");
   for (const t of planned) {
     assert.doesNotMatch(t, /<a\b/, "a planned course links nowhere");
-    assert.match(t, />Planned</);
+    assert.match(t, /^\s*<span class="hp-k">Planned\b/, "and says Planned before anything else");
     assert.doesNotMatch(text(t), /\b(19|20)\d\d\b|January|February|March|April|June|July|August|September|October|November|December|Q[1-4]\b/, "a plan names no date");
   }
   assert.doesNotMatch(text(hub), /coming soon|\bsoon\b|waitlist|launching/i);
@@ -46,14 +59,16 @@ test("every lesson is open to anyone; the email is an opt-in that asks for nothi
   // The founder, 2026-10-01: "I want the lessons to be open to everybody as that is the free
   // content that I am giving. Of course, if they want a little bit of extra, they can opt in the email."
   const css = read("assets/hubricon.css"), js = read("assets/learn.js");
-  for (const src of [css, js]) assert.doesNotMatch(src, /learn-in/, "no state where a lesson waits for an email");
-  assert.doesNotMatch(js, /api\/learn|\.courses\b/, "the course page asks for nothing before it shows a lesson");
+  const lsJs = read("assets/learn-late-supplier.js") + read("assets/learn-late-supplier.mjs");
+  for (const src of [css, js, read("assets/learn.css"), lsJs]) assert.doesNotMatch(src, /learn-in/, "no state where a lesson waits for an email");
+  for (const src of [js, lsJs]) assert.doesNotMatch(src, /api\/learn|\.courses\b/, "the course page asks for nothing before it shows a lesson");
   assert.match(css, /\.js \.course-page \.lesson\.current \{ display: block; \}/);
   for (const c of Object.values(COURSES)) {
     const page = read(`${c.path.slice(1)}.html`);
-    const first = page.match(/<article class="lesson" id="([^"]+)"/)[1];
-    assert.match(page, new RegExp(`<a class="btn" href="#${first}" data-start>Start lesson 1 `), `${c.path}: the cover starts lesson 1`);
-    assert.match(text(page), /Every lesson and the spreadsheet are open\. No email, no account\./);
+    const first = lessonsOf(page)[0].id;
+    assert.match(page, new RegExp(`<a class="(btn|ls-start)" href="#${first}" data-start>Start lesson 1 `), `${c.path}: the cover starts lesson 1`);
+    // The cover says it in words: a sentence on the older template, "0 emails needed" in the Late Supplier's facts row.
+    assert.match(text(page), isLs(page) ? /\b0 emails needed\b/ : /Every lesson and the spreadsheet are open\. No email, no account\./, `${c.path}: the cover says no email is needed`);
     assert.doesNotMatch(page, /learn-in|id="join"/);
     const forms = [...page.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
     assert.equal(forms.length, 2, `${c.path}: the opt-in under the cover and at the end of the last lesson`);
@@ -65,8 +80,7 @@ test("every lesson is open to anyone; the email is an opt-in that asks for nothi
       assert.match(form, /One click unsubscribes/);
       assert.match(form, /href="\/privacy#learn"/);
     }
-    const lessons = [...page.matchAll(/<article class="lesson"[\s\S]*?<\/article>/g)].map(([a]) => a);
-    assert.ok(lessons.at(-1).includes(forms[1]), `${c.path}: the second sits in the last lesson`);
+    assert.ok(lessonsOf(page).at(-1).whole.includes(forms[1]), `${c.path}: the second sits at the end of the last lesson`);
   }
   assert.match(read("privacy.html"), /id="learn"/);
 });
@@ -86,13 +100,43 @@ test("three columns: the lessons, the lesson with the spreadsheet under its head
   }
 });
 
-test("every lesson in every live course asks two questions before its task, each answer behind a click", () => {
+test("every lesson in every live course asks its questions before its task, each answer behind a click", () => {
   // Retrieval practice: trying to answer before reading the answer is what makes a lesson stay.
   for (const c of Object.values(COURSES)) {
     const page = read(`${c.path.slice(1)}.html`);
-    const lessons = [...page.matchAll(/<article class="lesson" id="([^"]+)"[\s\S]*?<\/article>/g)];
+    const lessons = lessonsOf(page).filter((l) => !l.end);
     assert.ok(lessons.length >= 1, c.path);
-    for (const [whole, id] of lessons) {
+    if (isLs(page)) {
+      // The Late Supplier: every lesson opens on a guess, and every lesson after the first
+      // on a question from the lesson before it. Each answer waits for the reader's pick.
+      const lsCss = read("assets/learn.css"), lsJs = read("assets/learn-late-supplier.js");
+      assert.match(lsCss, /html\.js \.ls-guess\.pending:not\(\.answered\) \.ls-reveal \{ display: none; \}/);
+      assert.match(lsCss, /html\.js \.ls-recall\.pending:not\(\.answered\) \.ls-recall-a \{ display: none; \}/);
+      assert.equal((lsJs.match(/classList\.add\("pending"\)/g) || []).length, 2, "the page hides both kinds of answer until the reader picks");
+      // A question here is a prompt that ends in "?" (or a sentence left for the reader to
+      // finish, ending in "…"), at least two answers to pick from, and a right one among them.
+      const asked = (m, where) => {
+        assert.ok(m, `${where}, and its answer`);
+        const [, right, prompt, between] = m;
+        assert.match(text(prompt), /[?…]$/, `${where}: asks something`);
+        const picks = between.match(/<button type="button"/g) || [];
+        assert.ok(picks.length >= 2, `${where}: at least two answers to pick from`);
+        assert.ok(Number(right) < picks.length, `${where}: the right answer is one of them`);
+      };
+      lessons.forEach(({ whole, id }, i) => {
+        const task = whole.indexOf('<aside class="ls-do">');
+        assert.ok(task > 0, `${c.path}#${id}: ends with something to do`);
+        const guess = whole.match(/<div class="ls-guess" data-guess data-answer="(\d+)"[^>]*>\s*<p class="ls-guess-k">Guess first<\/p>\s*<p class="ls-guess-q">([\s\S]*?)<\/p>([\s\S]*?)<div class="ls-reveal">\s*<p>[\s\S]+?<\/p>/);
+        asked(guess, `${c.path}#${id}: Guess first`);
+        assert.ok(whole.indexOf(guess[0]) < task, `${c.path}#${id}: the guess comes before the task`);
+        if (i === 0) return;
+        const recall = whole.match(new RegExp(`<div class="ls-recall" data-recall data-answer="(\\d+)"[^>]*>\\s*<p class="ls-recall-k">Quick check · from lesson ${i}</p>\\s*<p class="ls-recall-q">([\\s\\S]*?)</p>([\\s\\S]*?)<p class="ls-recall-a">[\\s\\S]+?</p>`));
+        asked(recall, `${c.path}#${id}: a question from lesson ${i}`);
+        assert.ok(whole.indexOf(recall[0]) < whole.indexOf(guess[0]), `${c.path}#${id}: the check opens the lesson`);
+      });
+      continue;
+    }
+    for (const { whole, id } of lessons) {
       const check = whole.match(/<div class="check">[\s\S]*?<\/ol>\s*<\/div>/)?.[0];
       assert.ok(check, `${c.path}#${id}: Check yourself`);
       assert.ok(whole.indexOf(check) < whole.indexOf('<div class="do">'), `${c.path}#${id}: the questions come before the task`);
@@ -135,12 +179,33 @@ test("every note drafted for the list composes, types no figure the course compu
   assert.throws(() => resolveFills("{fill:fee-staircase:no_such_key}"), /no figure no_such_key/);
 });
 
-test("each course on one page: eight cells, each pointing at a lesson that teaches it, no figure typed, one printed page", () => {
+test("each course on one page: every cell points at a lesson that teaches it, no figure typed, one printed page", () => {
   const css = read("assets/hubricon.css");
   assert.match(css, /body\.sheet-page > :not\(main\)[^{]*\{ display: none !important; \}/, "printed, the bar and the footer go");
   assert.match(css, /@media print \{[\s\S]*?\.sheet \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, "two columns on paper, whatever the width");
   for (const c of Object.values(COURSES)) {
-    const card = read(`${c.card.slice(1)}.html`), page = read(`${c.path.slice(1)}.html`);
+    const page = read(`${c.path.slice(1)}.html`);
+    if (c.card.startsWith(`${c.path}#`)) {
+      // The Late Supplier keeps its one page inside the course, as the last section: the
+      // reader's own plan, a cell per number, each naming the lesson that produced it.
+      const id = c.card.slice(c.path.length + 1), all = lessonsOf(page), sheet = all.at(-1), taught = all.length - 1;
+      assert.ok(sheet.end && sheet.id === id, `${c.card} is the course's closing section`);
+      assert.ok(page.includes(`href="#${id}"`), `${c.path} links its one page`);
+      const cells = [...sheet.whole.matchAll(/<div class="ls-plan-cell[^"]*">[\s\S]*?<\/div>/g)].map(([x]) => x);
+      assert.ok(cells.length >= 1, c.card);
+      for (const cell of cells) {
+        const n = Number(cell.match(/<small[^>]*>[^<]*\blesson (\d+)\b/i)?.[1]);
+        assert.ok(n >= 1 && n <= taught, `${c.card}: every cell names a lesson that exists: ${text(cell)}`);
+      }
+      const rules = sheet.whole.match(/<ol class="ls-rules">[\s\S]*?<\/ol>/)[0].match(/<li>/g);
+      assert.equal(rules.length, taught, `${c.card}: one rule for each lesson`);
+      const prose = text(sheet.whole.replace(/<(\w+)\b[^>]*\bdata-fill="[^"]*"[^>]*>[^<]*<\/\1>/g, "FILL"));
+      assert.doesNotMatch(prose, /\$\d/, `${c.card}: a dollar figure is typed; it must be a fill`);
+      assert.match(text(sheet.whole), /every lesson open/i);
+      assert.match(read("assets/learn.css"), /@media print \{\s*\.nav, \.site-foot,[^{]*\.ls-lesson:not\(#one-page\)[^{]*\{ display: none !important; \}/, "printed, only the plan stays");
+      continue;
+    }
+    const card = read(`${c.card.slice(1)}.html`);
     assert.ok(page.includes(`href="${c.card}"`), `${c.path} links its one page`);
     const cells = [...card.matchAll(/<section class="sheet-cell"[\s\S]*?<\/section>/g)].map(([s]) => s);
     assert.equal(cells.length, 8, c.card);
@@ -181,13 +246,15 @@ test("/learn is in every footer and the Education tab; on the home page it is ne
   const home = read("index.html");
   for (const [tag] of home.matchAll(/<a\b[^>]*href="\/learn[^"]*"[^>]*>/g)) assert.doesNotMatch(tag, /class="btn/, tag);
   const learn = home.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
-  assert.match(learn, /<a class="strip-tile" href="\/learn\/fee-staircase"/, "every live course opens from the home page's strip");
+  for (const c of Object.values(COURSES)) assert.ok(learn.includes(`<a class="strip-tile" href="${c.path}"`), `${c.path} opens from the home page's strip`);
   assert.match(learn, /<a class="more" href="\/learn">All courses/);
   // the featured course and its optional email live on /learn since the home page went short (2026-10-01 evening)
   const hub = read("learn/index.html");
-  assert.match(hub, /<h3><a href="\/learn\/fee-staircase">The Fee Staircase<\/a><\/h3>/, "the featured course links to its page");
-  assert.match(hub, /<form class="join-tile" data-join="fee-staircase"/, "and carries the optional email, where Acquisition.com asks for it");
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "learn/index.html", "learn/fee-staircase.html"]) {
+  // The featured course is the first live one in data/library.json (The Late Supplier since 2026-11-22).
+  const featured = library.courses.find((c) => c.status === "live");
+  assert.ok(hub.includes(`<h2 class="hf-title" id="hf-${featured.slug}"><a href="${featured.path}">`), "the featured course links to its page");
+  assert.ok(hub.includes(`<form class="join-tile" data-join="${featured.slug}"`), "and carries the optional email, where Acquisition.com asks for it");
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "learn/index.html", ...Object.values(COURSES).map((c) => `${c.path.slice(1)}.html`)]) {
     const h = read(page);
     const foot = h.slice(h.lastIndexOf("<footer"));
     assert.match(foot, /href="\/learn"/, `${page}'s footer`);
